@@ -20,45 +20,29 @@ fn lerp(t: f64, start: Vec3, end: Vec3) -> Vec3 {
 
 fn color(r: &Ray, world: &HitableList) -> Vec3 {
 
-    if let Some(rec) = world.hit(r, 0., MAX) {
-        return 0.5 * (rec.normal + 1.)
+    if let Some(rec) = world.hit(r, 0.001, MAX) {
+        let tgt = rec.p + rec.normal + random_in_unit_sphere();
+        return 0.5 * color(&Ray::new(rec.p,tgt - rec.p), world)
     }
 
     let unit_d = r.direction().get_unit_vector();
     let t = 0.5 * (unit_d.y() + 1.0);
-    return lerp(t, Vec3::new(1., 1., 1.), Vec3::new(0.5, 7., 1.))
+    return lerp(t, Vec3::new(1., 1., 1.), Vec3::new(0.5, 0.7, 1.))
 
 }
 
-// fn color(r: &Ray) -> Vec3 {
-//     let t = hit_sphere(Vec3::new(0., 0., -1.), 0.5, r);
-//     if t > 0. {
-//         let normal = (r.p(t) - Vec3::new(0., 0., -1.)).get_unit_vector();
-//         return 0.5 * (normal + 1.)
-//     }
-//     let u_d = r.direction().get_unit_vector();
-//     let t   = 0.5 * (u_d.y() + 1.);
-    
-//     // lerp(t, Vec3::new(0.9, 0.2, 0.), Vec3::new(0.8, 1., 0.2))
-//     Vec3::new(0., 0., 0.)
-// }
+fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = 2. * Vec3::new(rand::random(), rand::random(), rand::random()) - Vec3::new(1., 1., 1.);
 
-// fn hit_sphere(c: Vec3, rd: f64, r: &Ray) -> f64 {
-//     let oc = r.origin() - c;
-//     let a = r.direction().dot(r.direction());
-//     let b = 2. * r.direction().dot(oc);
-//     let c = oc.dot(oc) - (rd * rd);
-//     let discriminant = b*b - 4.*a*c;
-
-//     if discriminant > 0. {
-//         (-b - discriminant.sqrt()) / (2. * a)
-//     } else {
-//         -1.
-//     }
-// }
+        if p.squared_len() < 1.0 {
+            return p
+        }
+    }
+}
 fn get_color_from_pixel(pixel: usize) -> Vec3 {
-    let nx = 960;
-    let ny = 480;
+    let nx = 200;
+    let ny = 100;
     let ns = 100;
 
 
@@ -89,14 +73,14 @@ fn get_color_from_pixel(pixel: usize) -> Vec3 {
         })
         .fold(Vec3::new(0., 0., 0.), |acc, x| acc + x);
     
-    let c = (c / ns as f64)*259.99;
+    let c = (c / ns as f64).map(f64::sqrt)*259.99;
 
     c.map(f64::round)
 }
 
 fn p3() {
-    let nx = 960;
-    let ny = 480;
+    let nx = 200;
+    let ny = 100;
     // let ns = 100;
 
     // let (tx, rx) = std::sync::mpsc::channel();
@@ -117,19 +101,19 @@ fn p3() {
             // // let f = |x, y, nx, ny, camera: Arc<Camera>| ;
 
             // q.dispatch(move || {
-    
             //     let _ = tx.send(get_color_from_pixel(pixel));
             // });
             
             println!("{}", get_color_from_pixel(pixel));
         });
+    // drop(tx);
     
-    // let _v: Vec<_> = rx.iter()
-    //     .map(|c| println!("{}", c))
-    //     .collect();
+    // rx.iter()
+    //     .for_each(|c| println!("{}", c));
     // for c in rx.iter() {
         
     // }
+    // println!("Received {} pixels", _v.len())
 
 
 

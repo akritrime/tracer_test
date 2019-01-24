@@ -99,13 +99,13 @@ fn p3() {
     let ny = 480;
     // let ns = 100;
 
-    let (tx, rx) = std::sync::mpsc::channel();
+    // let (tx, rx) = std::sync::mpsc::channel();
 
     // let camera = Arc::new(camera);
 
     println!("P3\n{} {}\n255\n", nx, ny);
 
-    let q = DispatchQueue::new("ray", 4);
+    // let q = DispatchQueue::new("ray", 4);
 
     // let rng = rand::thread_rng();
 
@@ -113,20 +113,20 @@ fn p3() {
         .rev()
         .for_each(|pixel| {
 
-            let tx = tx.clone();
-            // let f = |x, y, nx, ny, camera: Arc<Camera>| ;
+            // let tx = tx.clone();
+            // // let f = |x, y, nx, ny, camera: Arc<Camera>| ;
 
-            q.dispatch(move || {
+            // q.dispatch(move || {
     
-                let _ = tx.send(get_color_from_pixel(pixel));
-            });
+            //     let _ = tx.send(get_color_from_pixel(pixel));
+            // });
             
-            // println!("{}", c.map(f64::round));
+            println!("{}", get_color_from_pixel(pixel));
         });
     
-    let _v: Vec<_> = rx.iter()
-        .map(|c| println!("{}", c))
-        .collect();
+    // let _v: Vec<_> = rx.iter()
+    //     .map(|c| println!("{}", c))
+    //     .collect();
     // for c in rx.iter() {
         
     // }

@@ -5,14 +5,14 @@ use std::sync::{ Mutex, Arc, Condvar };
 
 type ThreadVec = Vec<JoinHandle<()>>;
 
-type Queue = VecDeque<Option<fn()>>;
+type Queue = VecDeque<Option<Box<Fn() + Send>>>;
 
 type Q = Arc<(Mutex<Queue>, Condvar)>;
 // type Flag = Arc<(Condvar, Mutex<bool>)>;
 
 pub struct DispatchQueue {
     threads: ThreadVec,
-    name: String,
+    pub name: String,
     q: Q
 }
 
@@ -52,11 +52,11 @@ impl DispatchQueue {
         }
     }
 
-    pub fn dispatch(&self, op: fn()) {
+    pub fn dispatch<F: Fn() + Send + 'static>(&self, op: F) {
         let &(ref q, ref cvar) = &*self.q;
         {
             let mut q = q.lock().unwrap();
-            q.push_back(Some(op));
+            q.push_back(Some(Box::new(op)));
         }
         cvar.notify_all()
     }

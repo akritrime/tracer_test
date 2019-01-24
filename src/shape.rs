@@ -1,4 +1,3 @@
-use std::ops::Range;
 use std::convert::From;
 
 use super::{
@@ -7,7 +6,7 @@ use super::{
 };
 
 pub trait Hitable {
-    fn hit(&self, r: &Ray, range: Range<f64>) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, tmin: f64, tmax: f64) -> Option<HitRecord>;
 }
 
 // #[derive(Clone, Copy)]
@@ -28,6 +27,12 @@ pub struct Sphere {
     center: Vec3,
     radius: f64,
 }
+
+// impl HitRecord {
+//     fn new(t: f64, p: Vec3, normal: Vec3) -> Self {
+//         Self { t, p, normal }
+//     }
+// }
 
 impl Sphere {
     pub fn new(center: Vec3, radius: f64) -> Self {
@@ -52,28 +57,29 @@ impl Sphere {
 }
 
 impl Hitable for Sphere {
-    fn hit(&self, r: &Ray, range: Range<f64>) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, tmin: f64, tmax: f64) -> Option<HitRecord> {
         let oc =  r.origin() - self.center;
-        let a = r.direction().dot(r.direction());
-        let b = 2.0 * oc.dot(r.direction());
-        let c = oc.dot(oc) - self.radius.powi(2);
+        let a  = r.direction().dot(r.direction());
+        let b  = oc.dot(r.direction());
+        let c  = oc.dot(oc) - self.radius.powi(2);
+
         let discriminant = b*b - a*c;
+
+        let f = |t| {
+            let p      = r.p(t);
+            let normal = (p - self.center) / self.radius;
+            Some(HitRecord {t, p, normal})
+        };
 
         if discriminant > 0.0 {
             let temp = (-b - discriminant.sqrt()) / a;
-            if range.contains(&temp) {
-                let t = temp;
-                let p = r.p(temp);
-                let normal = (p - self.center) / self.radius;
-                return Some(HitRecord {t, p, normal})
+            if temp < tmax && temp > tmin {
+                return f(temp)
             }
 
             let temp = (-b + discriminant.sqrt()) / a;
-            if !range.contains(&temp) {
-                let t = temp;
-                let p = r.p(temp);
-                let normal = (p - self.center) / self.radius;
-                return Some(HitRecord {t, p, normal})
+            if temp < tmax && temp > tmin {
+                return f(temp)
             }
         }
 
@@ -83,22 +89,22 @@ impl Hitable for Sphere {
 
 impl Hitable for Shape {
 
-    fn hit(&self, r: &Ray, range: Range<f64>) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, tmin: f64, tmax: f64) -> Option<HitRecord> {
         match *self {
-            Self::_Sp(ref s) => s.hit(r, range)
+            Self::_Sp(ref s) => s.hit(r, tmin, tmax)
         }
     }
 }
 
 impl Hitable for HitableList {
-    fn hit(&self, r: &Ray, range: Range<f64>) -> Option<HitRecord> {
-        let mut hit_anything = None;
-        let mut closest_so_far = range.end;
+    fn hit(&self, r: &Ray, tmin: f64, tmax: f64) -> Option<HitRecord> {
+        let mut hit_anything   = None;
+        let mut closest_so_far = tmax;
 
         for hitable in &self.list {
-            if let Some(tr) = hitable.hit(r, range.start..closest_so_far) {
+            if let Some(tr) = hitable.hit(r, tmin, closest_so_far) {
                 closest_so_far = tr.t;
-                hit_anything = Some(tr);
+                hit_anything   = Some(tr);
             }
         }
 

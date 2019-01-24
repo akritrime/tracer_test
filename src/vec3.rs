@@ -166,3 +166,8 @@ impl ops::IndexMut<usize> for Vec3 {
     }
 }
 
+impl std::fmt::Display for Vec3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{} {} {}", self[0], self[1], self[2])
+    }
+}

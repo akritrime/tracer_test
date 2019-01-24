@@ -5,4 +5,5 @@ authors = ["akritrime <akritrime@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rand = "*"
+rand        = "*"
+lazy_static = "*"
